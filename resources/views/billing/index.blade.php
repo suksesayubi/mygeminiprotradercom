@@ -112,7 +112,7 @@
                                             <tr>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gateway</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                             </tr>
@@ -124,25 +124,45 @@
                                                         {{ $payment->created_at->format('M d, Y') }}
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        ${{ number_format($payment->amount, 2) }}
+                                                        @if($payment->pay_currency === 'IDR')
+                                                            Rp {{ number_format($payment->pay_amount, 0, ',', '.') }}
+                                                        @else
+                                                            {{ number_format($payment->pay_amount, 8) }} {{ strtoupper($payment->pay_currency) }}
+                                                        @endif
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 uppercase">
-                                                        {{ $payment->currency }}
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        @if($payment->payment_gateway === 'duitku')
+                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                                                🇮🇩 Rupiah
+                                                            </span>
+                                                        @else
+                                                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                                                💰 Crypto
+                                                            </span>
+                                                        @endif
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <span class="px-2 py-1 text-xs font-medium rounded-full
-                                                            @if($payment->status === 'completed') bg-green-100 text-green-800
-                                                            @elseif($payment->status === 'pending') bg-yellow-100 text-yellow-800
-                                                            @elseif($payment->status === 'failed') bg-red-100 text-red-800
+                                                            @if($payment->payment_status === 'completed') bg-green-100 text-green-800
+                                                            @elseif($payment->payment_status === 'pending') bg-yellow-100 text-yellow-800
+                                                            @elseif($payment->payment_status === 'failed') bg-red-100 text-red-800
                                                             @else bg-gray-100 text-gray-800
                                                             @endif">
-                                                            {{ ucfirst($payment->status) }}
+                                                            {{ ucfirst($payment->payment_status) }}
                                                         </span>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                        @if($payment->status === 'completed')
+                                                        @if($payment->payment_status === 'completed')
                                                             <a href="{{ route('billing.download-invoice', $payment) }}" 
                                                                class="text-blue-600 hover:text-blue-900">Download Invoice</a>
+                                                        @elseif($payment->payment_status === 'pending')
+                                                            @if($payment->payment_gateway === 'duitku')
+                                                                <a href="{{ route('billing.payment-duitku', $payment->duitku_payment_id) }}" 
+                                                                   class="text-green-600 hover:text-green-900">Complete Payment</a>
+                                                            @else
+                                                                <a href="{{ route('billing.payment', $payment->nowpayments_payment_id) }}" 
+                                                                   class="text-blue-600 hover:text-blue-900">Complete Payment</a>
+                                                            @endif
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -219,18 +239,62 @@
                                         @endif
                                         
                                         @if(!$activeSubscription || $activeSubscription->subscription_plan_id !== $plan->id)
-                                            <form action="{{ route('billing.subscribe') }}" method="POST">
+                                            <form action="{{ route('billing.subscribe') }}" method="POST" id="subscribeForm{{ $plan->id }}">
                                                 @csrf
                                                 <input type="hidden" name="plan_id" value="{{ $plan->id }}">
+                                                
+                                                <!-- Payment Gateway Selection -->
                                                 <div class="mb-3">
-                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Currency</label>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                                                    <div class="space-y-2">
+                                                        <label class="flex items-center">
+                                                            <input type="radio" name="payment_gateway" value="crypto" class="mr-2" onchange="togglePaymentOptions({{ $plan->id }}, 'crypto')" checked>
+                                                            <span class="text-sm">💰 Cryptocurrency (BTC, ETH, USDT, LTC)</span>
+                                                        </label>
+                                                        <label class="flex items-center">
+                                                            <input type="radio" name="payment_gateway" value="rupiah" class="mr-2" onchange="togglePaymentOptions({{ $plan->id }}, 'rupiah')">
+                                                            <span class="text-sm">🇮🇩 Rupiah (QRIS, E-Wallet, Bank Transfer)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Crypto Payment Options -->
+                                                <div id="cryptoOptions{{ $plan->id }}" class="mb-3">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Cryptocurrency</label>
                                                     <select name="pay_currency" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
                                                         <option value="btc">Bitcoin (BTC)</option>
                                                         <option value="eth">Ethereum (ETH)</option>
                                                         <option value="usdt">Tether (USDT)</option>
                                                         <option value="ltc">Litecoin (LTC)</option>
                                                     </select>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        Price: ${{ number_format($plan->price, 2) }} USD
+                                                    </div>
                                                 </div>
+
+                                                <!-- Rupiah Payment Options -->
+                                                <div id="rupiahOptions{{ $plan->id }}" class="mb-3 hidden">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                                                    <select name="payment_method" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                                        <optgroup label="E-Wallet">
+                                                            <option value="SP">ShopeePay</option>
+                                                            <option value="OV">OVO</option>
+                                                            <option value="DA">DANA</option>
+                                                            <option value="LK">LinkAja</option>
+                                                        </optgroup>
+                                                        <optgroup label="Bank Transfer">
+                                                            <option value="I1">BCA Virtual Account</option>
+                                                            <option value="M2">Mandiri Virtual Account</option>
+                                                            <option value="B1">CIMB Niaga Virtual Account</option>
+                                                            <option value="AG">ATM Bersama</option>
+                                                        </optgroup>
+                                                    </select>
+                                                    <div class="text-xs text-gray-500 mt-1">
+                                                        Price: Rp {{ number_format($plan->price * 15000, 0, ',', '.') }} IDR
+                                                        <span class="text-gray-400">(~${{ number_format($plan->price, 2) }} USD)</span>
+                                                    </div>
+                                                </div>
+
                                                 <button type="submit" 
                                                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700">
                                                     Subscribe Now
@@ -246,4 +310,21 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function togglePaymentOptions(planId, gateway) {
+            const cryptoOptions = document.getElementById('cryptoOptions' + planId);
+            const rupiahOptions = document.getElementById('rupiahOptions' + planId);
+            
+            if (gateway === 'crypto') {
+                cryptoOptions.classList.remove('hidden');
+                rupiahOptions.classList.add('hidden');
+            } else {
+                cryptoOptions.classList.add('hidden');
+                rupiahOptions.classList.remove('hidden');
+            }
+        }
+    </script>
+    @endpush
 </x-app-layout>

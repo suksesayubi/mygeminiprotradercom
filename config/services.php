@@ -43,4 +43,10 @@ return [
         'sandbox' => env('NOWPAYMENTS_SANDBOX', false),
     ],
 
+    'duitku' => [
+        'merchant_code' => env('DUITKU_MERCHANT_CODE', 'DS17625'),
+        'api_key' => env('DUITKU_API_KEY', '2b4a2b8e0b8e4c8e8e8e8e8e8e8e8e8e'),
+        'sandbox' => env('DUITKU_SANDBOX', true),
+    ],
+
 ];

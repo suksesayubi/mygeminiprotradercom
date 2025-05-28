@@ -59,6 +59,7 @@ Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function
     Route::get('/', [BillingController::class, 'index'])->name('index');
     Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
     Route::get('/payment/{paymentId}', [BillingController::class, 'payment'])->name('payment');
+    Route::get('/payment-duitku/{paymentId}', [BillingController::class, 'paymentDuitku'])->name('payment-duitku');
     Route::get('/history', [BillingController::class, 'paymentHistory'])->name('history');
     Route::post('/cancel-subscription', [BillingController::class, 'cancelSubscription'])->name('cancel-subscription');
     Route::get('/success', [BillingController::class, 'success'])->name('success');
@@ -66,8 +67,9 @@ Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function
     Route::get('/invoice/{payment}', [BillingController::class, 'downloadInvoice'])->name('download-invoice');
 });
 
-// Payment Webhook (no auth middleware)
+// Payment Webhooks (no auth middleware)
 Route::post('/payments/webhook', [PaymentWebhookController::class, 'handle'])->name('payments.webhook');
+Route::post('/duitku/callback', [BillingController::class, 'duitkuCallback'])->name('duitku.callback');
 
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
