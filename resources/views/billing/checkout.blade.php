@@ -1,6 +1,9 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Checkout') }}
+        </h2>
+    </x-slot>
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-width-container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="max-w-2xl mx-auto">
@@ -342,4 +345,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endsection
+</x-app-layout>
