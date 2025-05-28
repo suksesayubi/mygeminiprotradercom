@@ -479,19 +479,15 @@
                 }
             });
 
-            // Step 1 -> Step 2
+            // Step 1 -> Checkout Page
             const btnProceed = document.getElementById('btn-proceed');
             if (btnProceed) {
                 btnProceed.addEventListener('click', function() {
                     if (selectedPlan) {
-                        document.getElementById('step-1').classList.add('hidden');
-                        document.getElementById('step-2').classList.remove('hidden');
-                        
-                        // Update selected plan display
-                        document.getElementById('selected-plan-name').textContent = selectedPlan.name;
-                        document.getElementById('selected-plan-price').textContent = `$${selectedPlan.price.toFixed(2)}/month`;
-                        
-                        currentStep = 2;
+                        // Redirect to checkout page with selected plan
+                        window.location.href = `{{ route('billing.checkout') }}?plan_id=${selectedPlan.id}`;
+                    } else {
+                        alert('Please select a subscription plan first.');
                     }
                 });
             }

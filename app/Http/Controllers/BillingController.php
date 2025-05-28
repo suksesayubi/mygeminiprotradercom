@@ -37,6 +37,235 @@ class BillingController extends Controller
         ));
     }
 
+    public function checkout(Request $request)
+    {
+        $planId = $request->get('plan_id');
+        
+        if (!$planId) {
+            return redirect()->route('billing.index')->with('error', 'Please select a subscription plan first.');
+        }
+
+        $plan = SubscriptionPlan::findOrFail($planId);
+        $user = auth()->user();
+
+        // Check if user already has an active subscription
+        if ($user->hasActiveSubscription()) {
+            return redirect()
+                ->route('billing.index')
+                ->with('error', 'You already have an active subscription.');
+        }
+
+        // Convert USD to IDR (approximate rate: 1 USD = 15,000 IDR)
+        $amountIDR = $plan->price * 15000;
+
+        return view('billing.checkout', compact('plan', 'amountIDR'));
+    }
+
+    public function processCheckout(Request $request)
+    {
+        $request->validate([
+            'plan_id' => 'required|exists:subscription_plans,id',
+            'payment_method' => 'required|string|in:crypto,card,qris',
+            'crypto_currency' => 'required_if:payment_method,crypto|string|in:USDT,BTC,ETH',
+            'cardholder_name' => 'required_if:payment_method,card|string|max:255',
+            'card_number' => 'required_if:payment_method,card|string',
+            'expiry_date' => 'required_if:payment_method,card|string',
+            'cvc' => 'required_if:payment_method,card|string',
+        ]);
+
+        $user = auth()->user();
+        $plan = SubscriptionPlan::findOrFail($request->plan_id);
+
+        // Check if user already has an active subscription
+        if ($user->hasActiveSubscription()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an active subscription.'
+            ]);
+        }
+
+        try {
+            if ($request->payment_method === 'crypto') {
+                return $this->processCryptoCheckout($request, $user, $plan);
+            } elseif ($request->payment_method === 'card') {
+                return $this->processCardCheckout($request, $user, $plan);
+            } else { // qris
+                return $this->processQrisCheckout($request, $user, $plan);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process payment: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    private function processCryptoCheckout(Request $request, $user, $plan)
+    {
+        // Create payment with NowPayments
+        $paymentResponse = $this->nowPayments->createSubscriptionPayment(
+            $user->id,
+            $plan->id,
+            $plan->price,
+            $plan->currency,
+            strtolower($request->crypto_currency)
+        );
+
+        // Create subscription record
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'subscription_plan_id' => $plan->id,
+            'status' => 'pending',
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth($plan->billing_period === 'yearly' ? 12 : 1),
+            'amount_paid' => $plan->price,
+            'currency' => $plan->currency,
+            'payment_method' => 'crypto',
+        ]);
+
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'payment_gateway' => 'nowpayments',
+            'nowpayments_payment_id' => $paymentResponse['payment_id'],
+            'nowpayments_order_id' => $paymentResponse['order_id'] ?? null,
+            'payment_status' => $paymentResponse['payment_status'],
+            'pay_amount' => $paymentResponse['pay_amount'],
+            'pay_currency' => $paymentResponse['pay_currency'],
+            'price_amount' => $paymentResponse['price_amount'],
+            'price_currency' => $paymentResponse['price_currency'],
+            'pay_address' => $paymentResponse['pay_address'] ?? null,
+            'description' => "Subscription to {$plan->name}",
+            'payment_created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'payment_data' => [
+                'wallet_address' => $paymentResponse['pay_address'],
+                'amount' => $paymentResponse['pay_amount'],
+                'currency' => $paymentResponse['pay_currency'],
+                'qr_code' => $paymentResponse['qr_code'] ?? null,
+                'time_left' => 900, // 15 minutes
+                'payment_id' => $paymentResponse['payment_id']
+            ]
+        ]);
+    }
+
+    private function processCardCheckout(Request $request, $user, $plan)
+    {
+        // Convert USD to IDR
+        $amountIDR = $plan->price * 15000;
+
+        // Create payment with Duitku (Credit Card)
+        $paymentResponse = $this->duitku->createSubscriptionPayment(
+            $user->id,
+            $plan->id,
+            $amountIDR,
+            'IDR',
+            'CC' // Credit Card method code for Duitku
+        );
+
+        // Create subscription record
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'subscription_plan_id' => $plan->id,
+            'status' => 'pending',
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth($plan->billing_period === 'yearly' ? 12 : 1),
+            'amount_paid' => $plan->price,
+            'currency' => $plan->currency,
+            'payment_method' => 'card',
+        ]);
+
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'payment_gateway' => 'duitku',
+            'payment_method' => 'CC',
+            'duitku_payment_id' => $paymentResponse['payment_id'],
+            'duitku_order_id' => $paymentResponse['order_id'],
+            'payment_status' => 'pending',
+            'pay_amount' => $amountIDR,
+            'pay_currency' => 'IDR',
+            'price_amount' => $plan->price,
+            'price_currency' => $plan->currency,
+            'payment_url' => $paymentResponse['payment_url'],
+            'expires_at' => $paymentResponse['expires_at'],
+            'description' => "Subscription to {$plan->name}",
+            'payment_created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'payment_data' => [
+                'payment_url' => $paymentResponse['payment_url'],
+                'payment_id' => $paymentResponse['payment_id']
+            ]
+        ]);
+    }
+
+    private function processQrisCheckout(Request $request, $user, $plan)
+    {
+        // Convert USD to IDR
+        $amountIDR = $plan->price * 15000;
+
+        // Create payment with Duitku (QRIS)
+        $paymentResponse = $this->duitku->createSubscriptionPayment(
+            $user->id,
+            $plan->id,
+            $amountIDR,
+            'IDR',
+            'QR' // QRIS method code for Duitku
+        );
+
+        // Create subscription record
+        $subscription = Subscription::create([
+            'user_id' => $user->id,
+            'subscription_plan_id' => $plan->id,
+            'status' => 'pending',
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth($plan->billing_period === 'yearly' ? 12 : 1),
+            'amount_paid' => $plan->price,
+            'currency' => $plan->currency,
+            'payment_method' => 'qris',
+        ]);
+
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'payment_gateway' => 'duitku',
+            'payment_method' => 'QR',
+            'duitku_payment_id' => $paymentResponse['payment_id'],
+            'duitku_order_id' => $paymentResponse['order_id'],
+            'payment_status' => 'pending',
+            'pay_amount' => $amountIDR,
+            'pay_currency' => 'IDR',
+            'price_amount' => $plan->price,
+            'price_currency' => $plan->currency,
+            'qr_string' => $paymentResponse['qr_string'] ?? null,
+            'payment_url' => $paymentResponse['payment_url'],
+            'expires_at' => $paymentResponse['expires_at'],
+            'description' => "Subscription to {$plan->name}",
+            'payment_created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'payment_data' => [
+                'qr_string' => $paymentResponse['qr_string'],
+                'amount' => $amountIDR,
+                'currency' => 'IDR',
+                'time_left' => 600, // 10 minutes
+                'payment_id' => $paymentResponse['payment_id']
+            ]
+        ]);
+    }
+
     public function subscribe(Request $request)
     {
         $request->validate([

@@ -57,6 +57,8 @@ Route::middleware(['auth'])->prefix('bots')->name('bots.')->group(function () {
 // Billing & Subscription Routes
 Route::middleware(['auth'])->prefix('billing')->name('billing.')->group(function () {
     Route::get('/', [BillingController::class, 'index'])->name('index');
+    Route::get('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::post('/process-checkout', [BillingController::class, 'processCheckout'])->name('process-checkout');
     Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
     Route::get('/payment/{paymentId}', [BillingController::class, 'payment'])->name('payment');
     Route::get('/payment-duitku/{paymentId}', [BillingController::class, 'paymentDuitku'])->name('payment-duitku');
