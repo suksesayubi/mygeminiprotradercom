@@ -15,6 +15,12 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('expert-signals.index')" :active="request()->routeIs('expert-signals.*')">
+                        {{ __('Expert Signals') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('bots.index')" :active="request()->routeIs('bots.*')">
+                        {{ __('Trading Bots') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -69,6 +75,12 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('expert-signals.index')" :active="request()->routeIs('expert-signals.*')">
+                {{ __('Expert Signals') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('bots.index')" :active="request()->routeIs('bots.*')">
+                {{ __('Trading Bots') }}
             </x-responsive-nav-link>
         </div>
 
