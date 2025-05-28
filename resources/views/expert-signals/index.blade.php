@@ -17,142 +17,147 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Main TradingView Chart -->
-            <div class="bg-gray-900 rounded-lg p-6 mb-6 border border-gray-700">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-white text-lg font-semibold">BTC/USDT Live Chart</h3>
-                    <div class="flex items-center space-x-3">
-                        <span class="px-3 py-1 bg-green-600 text-white rounded text-xs font-semibold">LIVE</span>
-                        <span class="text-xs text-gray-400">Powered by TradingView</span>
-                    </div>
-                </div>
-                <div class="rounded-lg overflow-hidden bg-gray-800">
-                    <!-- TradingView Advanced Chart Widget -->
-                    <div class="tradingview-widget-container" style="height:500px;width:100%">
-                        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-                        <div class="tradingview-widget-copyright" style="font-size: 13px; color: #848E9C; line-height: 14px; text-align: center; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;">
-                            <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
-                                <span style="color: #848E9C;">Track all markets on TradingView</span>
-                            </a>
+            <!-- Main Layout: Large Chart Left + 3 Widgets Right -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Left Side: Main TradingView Chart (2/3 width) -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gray-900 rounded-lg p-6 border border-gray-700 h-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-white text-lg font-semibold">BTC/USDT Live Chart</h3>
+                            <div class="flex items-center space-x-3">
+                                <span class="px-3 py-1 bg-green-600 text-white rounded text-xs font-semibold">LIVE</span>
+                                <span class="text-xs text-gray-400">Powered by TradingView</span>
+                            </div>
                         </div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                        {
-                          "autosize": true,
-                          "symbol": "BINANCE:BTCUSDT",
-                          "interval": "60",
-                          "timezone": "Etc/UTC",
-                          "theme": "dark",
-                          "style": "1",
-                          "locale": "en",
-                          "enable_publishing": false,
-                          "backgroundColor": "rgba(19, 23, 34, 1)",
-                          "gridColor": "rgba(42, 46, 57, 0.5)",
-                          "hide_top_toolbar": false,
-                          "hide_legend": false,
-                          "save_image": false,
-                          "container_id": "tradingview_chart"
-                        }
-                        </script>
+                        <div class="rounded-lg overflow-hidden bg-gray-800">
+                            <!-- TradingView Advanced Chart Widget -->
+                            <div class="tradingview-widget-container" style="height:600px;width:100%">
+                                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                                <div class="tradingview-widget-copyright" style="font-size: 13px; color: #848E9C; line-height: 14px; text-align: center; vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;">
+                                    <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                                        <span style="color: #848E9C;">Track all markets on TradingView</span>
+                                    </a>
+                                </div>
+                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+                                {
+                                  "autosize": true,
+                                  "symbol": "BINANCE:BTCUSDT",
+                                  "interval": "60",
+                                  "timezone": "Etc/UTC",
+                                  "theme": "dark",
+                                  "style": "1",
+                                  "locale": "en",
+                                  "enable_publishing": false,
+                                  "backgroundColor": "rgba(19, 23, 34, 1)",
+                                  "gridColor": "rgba(42, 46, 57, 0.5)",
+                                  "hide_top_toolbar": false,
+                                  "hide_legend": false,
+                                  "save_image": false,
+                                  "container_id": "tradingview_chart"
+                                }
+                                </script>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TradingView Technical Analysis Widgets Row -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <!-- Technical Analysis Summary -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h4 class="text-white text-sm font-semibold mb-3">TECHNICAL ANALYSIS SUMMARY</h4>
-                    <div class="rounded-lg overflow-hidden">
-                        <div class="tradingview-widget-container" style="height:200px;width:100%">
-                            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
-                            {
-                              "interval": "1h",
-                              "width": "100%",
-                              "isTransparent": false,
-                              "height": "200",
-                              "symbol": "BINANCE:BTCUSDT",
-                              "showIntervalTabs": true,
-                              "displayMode": "single",
-                              "locale": "en",
-                              "colorTheme": "dark"
-                            }
-                            </script>
+                <!-- Right Side: 3 Stacked Widgets (1/3 width) -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Technical Analysis Summary -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-white text-sm font-semibold mb-3">TECHNICAL ANALYSIS</h4>
+                        <div class="rounded-lg overflow-hidden">
+                            <div class="tradingview-widget-container" style="height:180px;width:100%">
+                                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+                                {
+                                  "interval": "1h",
+                                  "width": "100%",
+                                  "isTransparent": false,
+                                  "height": "180",
+                                  "symbol": "BINANCE:BTCUSDT",
+                                  "showIntervalTabs": true,
+                                  "displayMode": "single",
+                                  "locale": "en",
+                                  "colorTheme": "dark"
+                                }
+                                </script>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Symbol Overview -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h4 class="text-white text-sm font-semibold mb-3">SYMBOL OVERVIEW</h4>
-                    <div class="rounded-lg overflow-hidden">
-                        <div class="tradingview-widget-container" style="height:200px;width:100%">
-                            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
-                            {
-                              "symbols": [
-                                [
-                                  "BINANCE:BTCUSDT|1h"
-                                ]
-                              ],
-                              "chartOnly": false,
-                              "width": "100%",
-                              "height": "200",
-                              "locale": "en",
-                              "colorTheme": "dark",
-                              "autosize": false,
-                              "showVolume": false,
-                              "showMA": false,
-                              "hideDateRanges": false,
-                              "hideMarketStatus": false,
-                              "hideSymbolLogo": false,
-                              "scalePosition": "right",
-                              "scaleMode": "Normal",
-                              "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-                              "fontSize": "10",
-                              "noTimeScale": false,
-                              "valuesTracking": "1",
-                              "changeMode": "price-and-percent",
-                              "chartType": "area",
-                              "maLineColor": "#2962FF",
-                              "maLineWidth": 1,
-                              "maLength": 9,
-                              "backgroundColor": "rgba(19, 23, 34, 1)",
-                              "lineWidth": 2,
-                              "lineType": 0,
-                              "dateRanges": [
-                                "1d|1",
-                                "1m|30",
-                                "3m|60",
-                                "12m|1D",
-                                "60m|1W",
-                                "all|1M"
-                              ]
-                            }
-                            </script>
+                    
+                    <!-- Symbol Overview -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-white text-sm font-semibold mb-3">SYMBOL OVERVIEW</h4>
+                        <div class="rounded-lg overflow-hidden">
+                            <div class="tradingview-widget-container" style="height:180px;width:100%">
+                                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js" async>
+                                {
+                                  "symbols": [
+                                    [
+                                      "BINANCE:BTCUSDT|1h"
+                                    ]
+                                  ],
+                                  "chartOnly": false,
+                                  "width": "100%",
+                                  "height": "180",
+                                  "locale": "en",
+                                  "colorTheme": "dark",
+                                  "autosize": false,
+                                  "showVolume": false,
+                                  "showMA": false,
+                                  "hideDateRanges": false,
+                                  "hideMarketStatus": false,
+                                  "hideSymbolLogo": false,
+                                  "scalePosition": "right",
+                                  "scaleMode": "Normal",
+                                  "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
+                                  "fontSize": "10",
+                                  "noTimeScale": false,
+                                  "valuesTracking": "1",
+                                  "changeMode": "price-and-percent",
+                                  "chartType": "area",
+                                  "maLineColor": "#2962FF",
+                                  "maLineWidth": 1,
+                                  "maLength": 9,
+                                  "backgroundColor": "rgba(19, 23, 34, 1)",
+                                  "lineWidth": 2,
+                                  "lineType": 0,
+                                  "dateRanges": [
+                                    "1d|1",
+                                    "1m|30",
+                                    "3m|60",
+                                    "12m|1D",
+                                    "60m|1W",
+                                    "all|1M"
+                                  ]
+                                }
+                                </script>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Mini Chart -->
-                <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h4 class="text-white text-sm font-semibold mb-3">MINI CHART</h4>
-                    <div class="rounded-lg overflow-hidden">
-                        <div class="tradingview-widget-container" style="height:200px;width:100%">
-                            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-                            {
-                              "symbol": "BINANCE:BTCUSDT",
-                              "width": "100%",
-                              "height": "200",
-                              "locale": "en",
-                              "dateRange": "12M",
-                              "colorTheme": "dark",
-                              "isTransparent": false,
-                              "autosize": false,
-                              "largeChartUrl": ""
-                            }
-                            </script>
+                    
+                    <!-- Mini Chart -->
+                    <div class="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                        <h4 class="text-white text-sm font-semibold mb-3">MINI CHART</h4>
+                        <div class="rounded-lg overflow-hidden">
+                            <div class="tradingview-widget-container" style="height:180px;width:100%">
+                                <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+                                {
+                                  "symbol": "BINANCE:BTCUSDT",
+                                  "width": "100%",
+                                  "height": "180",
+                                  "locale": "en",
+                                  "dateRange": "12M",
+                                  "colorTheme": "dark",
+                                  "isTransparent": false,
+                                  "autosize": false,
+                                  "largeChartUrl": ""
+                                }
+                                </script>
+                            </div>
                         </div>
                     </div>
                 </div>
